@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorium 5 - Ignacy Knyps</title>
+<script src="glsim.js"></script>
+<script>
+    "use strict";
+
+    let objectNumber = 1;
+    let rotateX = 15;
+    let rotateY = 15;
+    let rotateZ = 0;
+    let N = 17;
+
+    function drawTriangle(v1, v2, v3, color) {
+        glColor3fv(color);
+        glBegin(GL_TRIANGLES);
+        glVertex3fv(v1);
+        glVertex3fv(v2);
+        glVertex3fv(v3);
+        glEnd();
+    }
+
+    function drawCorkscrew() {
+        let rotations = 8;
+        let points = 1000;
+        glBegin(GL_POINTS);
+        for (let i = 0; i < points; i++) {
+            let t = i / points;
+            let angle = t * rotations * 2 * Math.PI;
+            let x = 0.5 * Math.cos(angle);
+            let z = 0.5 * Math.sin(angle);
+            let y = t * 2 - 1;
+            glPointSize(1 + (i / 100));
+            glColor3f(0.6, 0.4, 0.2);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
+    }
+
+    function drawPyramid() {
+        let radius = 0.7;
+        let vertices = [];
+        for (let i = 0; i <= N; i++) {
+            let angle = (i / N) * 2 * Math.PI;
+            vertices.push([radius * Math.cos(angle), -0.6, radius * Math.sin(angle)]);
+        }
+        let apex = [0, 0.6, 0];
+        let baseCenter = [0, -0.6, 0];
+        for (let i = 0; i < N; i++) {
+            drawTriangle(apex, vertices[i], vertices[i+1], [0, 0.8, 0]);
+            drawTriangle(baseCenter, vertices[i+1], vertices[i], [0, 0.5, 0]);
+        }
+    }
+
+    function display() {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glLoadIdentity();
+        glRotatef(rotateZ, 0, 0, 1);
+        glRotatef(rotateY, 0, 1, 0);
+        glRotatef(rotateX, 1, 0, 0);
+        if (objectNumber == 1) {
+            drawCorkscrew();
+        } else {
+            drawPyramid();
+        }
+    }
+
+    function initGL() {
+        glMatrixMode(GL_PROJECTION);
+        glOrtho(-1, 1, -1, 1, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glEnable(GL_DEPTH_TEST);
+        glClearColor(0.9, 0.9, 0.9, 1);
+    }
+
+    function doKeyDown(evt) {
+        let key = evt.keyCode;
+        if (key == 49) objectNumber = 1;
+        if (key == 50) objectNumber = 2;
+        if (key == 37) rotateY -= 15;
+        if (key == 39) rotateY += 15;
+        if (key == 38) rotateX -= 15;
+        if (key == 40) rotateX += 15;
+        if (key == 33) rotateZ += 15;
+        if (key == 34) rotateZ -= 15;
+        if (key == 36) rotateX = rotateY = rotateZ = 0;
+        display();
+    }
+
+    function init() {
+        try {
+            glsimUse("glcanvas");
+        } catch (e) {
+            document.getElementById("canvas-holder").innerHTML = "Błąd inicjalizacji kontekstu graficznego.";
+            return;
+        }
+        document.onkeydown = doKeyDown;
+        initGL();
+        display();
+    }
+</script>
+</head>
+<body onload="init()">
+<h3>Laboratorium 5: OpenGL 3.3 - Ignacy Knyps (64325)</h3>
+<p>Klawisze 1-2: Obiekty | Strzałki/PgUp/PgDn: Obrót | Home: Reset</p>
+<div id="canvas-holder">
+<canvas id="glcanvas" width="600" height="600"></canvas>
+</div>
+</body>
+</html>
