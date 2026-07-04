@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Zadanie 2: Oswietlenie Piramida i 4 Swiatla</title>
+<link rel="stylesheet" href="demo.css">
+<script src="script/demo-core.js"></script>
+<script src="script/glsim.js"></script>
+<script src="script/basic-object-models-IFS.js"></script>
+<script>
+    "use strict";
+
+    var camera;
+    var frameNumber = 0;
+    var animating = true;
+
+    function drawPyramid(n) {
+        var radius = 4, height = 7;
+        glBegin(GL_TRIANGLES);
+        for (var i = 0; i < n; i++) {
+            var a1 = (i / n) * 2 * Math.PI;
+            var a2 = ((i + 1) / n) * 2 * Math.PI;
+            var mid = (a1 + a2) / 2;
+            glNormal3f(Math.cos(mid), 0.5, Math.sin(mid));
+            glVertex3f(0, height, 0);
+            glVertex3f(radius * Math.cos(a1), 0, radius * Math.sin(a1));
+            glVertex3f(radius * Math.cos(a2), 0, radius * Math.sin(a2));
+        }
+        glEnd();
+        glBegin(GL_POLYGON);
+        glNormal3f(0, -1, 0);
+        for (var i = 0; i < n; i++) {
+            var a = (i / n) * 2 * Math.PI;
+            glVertex3f(radius * Math.cos(a), 0, radius * Math.sin(a));
+        }
+        glEnd();
+    }
+
+    function lights() {
+        var zero = [0, 0, 0, 1];
+        
+        glEnable(GL_LIGHT3);
+        glPushMatrix();
+        glRotated(frameNumber * 0.7, 0, 1, 0);
+        glTranslated(12, 6, 0);
+        glLightfv(GL_LIGHT3, GL_POSITION, zero);
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 0);
+        glsimDrawModel(uvSphere(0.6, 16, 8));
+        glEnable(GL_LIGHTING);
+        glPopMatrix();
+
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+        glPushMatrix(); 
+        glRotated(-frameNumber, 0, 1, 0); 
+        glTranslated(10, 7, 0); 
+        glLightfv(GL_LIGHT1, GL_POSITION, zero); 
+        glPopMatrix();
+    }
+
+    function display() {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        camera.apply();
+        lights();
+
+        glPushMatrix();
+        glTranslated(0, -0.1, 0); 
+        glRotated(-90, 1, 0, 0); 
+        glScaled(12, 12, 0.5);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [0.4, 0.4, 0.4, 1]);
+        glsimDrawModel(uvCylinder(1, 1, 64));
+        glPopMatrix();
+
+        glPushMatrix();
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [0.8, 0.1, 0.1, 1]);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.4, 0.4, 0.4, 1]);
+        glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 40);
+        drawPyramid(17);
+        glPopMatrix();
+    }
+
+    function doFrame() { 
+        if (animating) { 
+            frameNumber++; 
+            display(); 
+            setTimeout(doFrame, 30); 
+        } 
+    }
+
+    function init() {
+        try { glsimUse("maincanvas"); } catch (e) { return; }
+        glEnable(GL_DEPTH_TEST); 
+        glEnable(GL_LIGHTING); 
+        glEnable(GL_NORMALIZE);
+        glLightfv(GL_LIGHT3, GL_DIFFUSE, [0.9, 0.9, 0, 1]);
+        
+        camera = new Camera(); 
+        camera.lookAt(15, 20, 40); 
+        camera.setScale(20);
+        camera.installTrackball(display);
+        doFrame();
+    }
+</script>
+</head>
+<body onload="init()">
+<h3>Zadanie 2: Piramida N=17 i 4 obracajace sie swiatla</h3>
+<canvas id="maincanvas" width="600" height="600"></canvas>
+</body>
+</html>
